@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace OSH
+namespace _0G
 {
     public class Flow : MonoBehaviour
     {
