@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace _0G
 {
@@ -8,7 +8,15 @@ namespace _0G
     {
         public static _0GLoader Instance { get; private set; }
 
-        private void Awake() => Instance = this;
+        private void Awake()
+        {
+            Instance = this;
+            GameObject anchor = gameObject;
+            Time.Setup(anchor);
+            Flow.Setup(anchor);
+            Player.Setup(anchor);
+            PlayerCharacter.Setup(anchor);
+        }
 
         private void OnDestroy()
         {

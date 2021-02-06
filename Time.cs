@@ -5,9 +5,14 @@ namespace _0G
 {
     public class Time : MonoBehaviour
     {
-        private static List<Time> s_Instances = new List<Time>();
+        private static readonly List<Time> s_Instances = new List<Time>();
 
         public static int InstanceCount => s_Instances.Count;
+
+        public static void Setup(GameObject anchor)
+        {
+            anchor.AddComponent<Time>();
+        }
 
         public static Time GetInstance(int index)
         {

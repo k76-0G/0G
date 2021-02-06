@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace _0G
 {
@@ -6,9 +6,19 @@ namespace _0G
     {
         public static Flow Instance { get; private set; }
 
+        public static void Setup(GameObject anchor)
+        {
+            anchor.AddComponent<Flow>();
+        }
+
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void Start()
+        {
+            Debug.Log("0G");
         }
 
         private void OnDestroy()
