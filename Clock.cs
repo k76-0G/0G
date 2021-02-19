@@ -3,18 +3,18 @@ using UnityEngine;
 
 namespace _0G
 {
-    public class Time : MonoBehaviour
+    public class Clock : MonoBehaviour
     {
-        private static readonly List<Time> s_Instances = new List<Time>();
+        private static readonly List<Clock> s_Instances = new List<Clock>();
 
         public static int InstanceCount => s_Instances.Count;
 
         public static void Setup(GameObject anchor)
         {
-            anchor.AddComponent<Time>();
+            anchor.AddComponent<Clock>();
         }
 
-        public static Time GetInstance(int index)
+        public static Clock GetInstance(int index)
         {
             return s_Instances[index];
         }

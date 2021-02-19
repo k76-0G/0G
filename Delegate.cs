@@ -2,7 +2,7 @@
 
 namespace _0G
 {
-    public static class Action
+    public static class Delegate
     {
         public static void Launch(ref Act action)
         {

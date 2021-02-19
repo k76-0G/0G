@@ -12,7 +12,7 @@ namespace _0G
         {
             Instance = this;
             GameObject anchor = gameObject;
-            Time.Setup(anchor);
+            Clock.Setup(anchor);
             Flow.Setup(anchor);
             Player.Setup(anchor);
             PlayerCharacter.Setup(anchor);
