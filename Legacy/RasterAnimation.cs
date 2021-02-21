@@ -47,6 +47,22 @@ namespace _0G.Legacy
         [SerializeField]
         protected List<Texture2D> m_FrameTextures = new List<Texture2D>();
 
+        [HideInInspector]
+        [SerializeField]
+        protected bool m_UsesELANIC = default; // Experimental Lossless Animation Compression
+
+        [Order(-10)]
+        [SerializeField]
+        protected List<Texture2D> m_Imprints = new List<Texture2D>();
+
+        [Order(-10)]
+        [SerializeField]
+        protected List<Color> m_Colors = new List<Color>();
+
+        [Order(-10)]
+        [SerializeField]
+        protected List<RasterDiffFrame> m_DiffFrames = new List<RasterDiffFrame>();
+
         //--
 
         [Header("GIF Import")]
@@ -101,7 +117,11 @@ namespace _0G.Legacy
 
         // PROPERTIES
 
-        public virtual Vector2 Dimensions => m_Dimensions;
+        public virtual List<Color> Colors => m_Colors;
+
+        public virtual Vector2Int Dimensions => m_Dimensions;
+
+        public virtual List<RasterDiffFrame> DiffFrames => m_DiffFrames;
 
         public virtual float FrameRate => m_SecondsPerFrame > 0 ? 1f / m_SecondsPerFrame : DEFAULT_SPRITE_FPS;
 
@@ -115,7 +135,11 @@ namespace _0G.Legacy
 
         public virtual bool hasPlayableFrameSequences { get; private set; }
 
+        public virtual List<Texture2D> Imprints => m_Imprints;
+
         public virtual int loopToSequence { get { return _loopToSequence; } }
+
+        public virtual bool UsesELANIC => m_UsesELANIC;
 
         // MONOBEHAVIOUR METHODS
 
@@ -294,6 +318,77 @@ namespace _0G.Legacy
 
             _frameSequences = newArray;
             m_FrameParagraph = "";
+        }
+
+#if ODIN_INSPECTOR
+        [Button(ButtonSizes.Large)]
+#endif
+        public void CompressImages()
+        {
+            m_Imprints.Clear();
+            m_Colors.Clear();
+            m_Colors.Add(Color.clear); // color index 0
+            m_DiffFrames.Clear();
+            Color[] currColors, prevColors = null;
+            for (int i = 0; i < m_FrameTextures.Count; ++i)
+            {
+                Texture2D tex = m_FrameTextures[i];
+                currColors = tex.GetPixels();
+                bool useImprint = false;
+                for (int j = 0; j < frameSequenceCount; ++j)
+                {
+                    if (i == _frameSequences[j].FrameList[0] - 1)
+                    {
+                        useImprint = true;
+                        break;
+                    }
+                }
+                if (useImprint)
+                {
+                    m_DiffFrames.Add(new RasterDiffFrame { HasImprint = true, ImprintIndex = m_Imprints.Count });
+                    m_Imprints.Add(tex);
+                }
+                else
+                {
+                    List<ushort> pixelX = new List<ushort>();
+                    List<ushort> pixelY = new List<ushort>();
+                    List<sbyte> pixelColorIndex = new List<sbyte>();
+                    for (int j = 0; j < currColors.Length; ++j)
+                    {
+                        Color c = currColors[j];
+                        if (c != prevColors[j])
+                        {
+                            int colorIndex;
+                            if (c.a.Ap(0)) // optimization
+                            {
+                                colorIndex = 0;
+                            }
+                            else
+                            {
+                                colorIndex = m_Colors.IndexOf(c);
+                                if (colorIndex < 0)
+                                {
+                                    colorIndex = m_Colors.Count;
+                                    m_Colors.Add(c);
+                                }
+                            }
+                            pixelX.Add((ushort)(j % Dimensions.x));
+                            pixelY.Add((ushort)(j / Dimensions.x));
+                            pixelColorIndex.Add((sbyte)colorIndex);
+                        }
+                    }
+                    m_DiffFrames.Add(new RasterDiffFrame
+                    {
+                        PixelX = pixelX.ToArray(),
+                        PixelY = pixelY.ToArray(),
+                        PixelColorIndex = pixelColorIndex.ToArray(),
+                    });
+                    // TODO: destroy m_FrameTextures asset on disk
+                }
+                prevColors = currColors;
+            }
+            // TODO: m_FrameTextures.Clear();
+            m_UsesELANIC = true;
         }
     }
 }

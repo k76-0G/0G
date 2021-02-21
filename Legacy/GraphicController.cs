@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -48,7 +48,13 @@ namespace _0G.Legacy
 
         private int m_AnimationFrameListIndex;
 
+        private int m_AnimationImageCount;
+
         private int m_AnimationImageIndex;
+
+        private int m_AnimationImageIndexPrev = -1;
+
+        private Texture2D m_AnimationTexture;
 
         private List<Texture2D> m_AnimationTextureList;
 
@@ -86,7 +92,7 @@ namespace _0G.Legacy
             set
             {
                 m_ImageColor = value;
-                RefreshGraphic();
+                RefreshAnimationImage();
             }
         }
 
@@ -148,8 +154,6 @@ namespace _0G.Legacy
 
         protected virtual TimeThread TimeThread => m_Body != null ? m_Body.TimeThread : G.time.GetTimeThread(TimeThreadInstance.Field);
 
-        private int AnimationImageCount => m_AnimationTextureList?.Count ?? 0;
-
         private Material BaseSharedMaterial => CharacterDossier?.GraphicData.BaseSharedMaterial;
 
         private CharacterDossier CharacterDossier => m_Body.CharacterDossier;
@@ -197,13 +201,13 @@ namespace _0G.Legacy
             {
                 ++m_AnimationFrameIndex;
 
-                if (AnimationImageCount > 0)
+                if (m_AnimationImageCount > 0)
                 {
                     AdvanceImageIndex();
                 }
             }
 
-            RefreshGraphic();
+            RefreshAnimationImage();
         }
 
         protected virtual void OnParticleSystemStopped()
@@ -291,13 +295,60 @@ namespace _0G.Legacy
 
         // MAIN METHODS
 
-        public void RefreshGraphic()
+        public void AdvanceAnimationTexture(int imageIndex)
         {
-            if (AnimationImageCount == 0) return;
+            RasterDiffFrame f = RasterAnimation.DiffFrames[imageIndex];
+            if (f.HasImprint)
+            {
+                m_AnimationTexture.SetPixels32(RasterAnimation.Imprints[f.ImprintIndex].GetPixels32());
+            }
+            else
+            {
+                List<Color> colors = RasterAnimation.Colors;
+                for (int i = 0; i < f.DiffPixelCount; ++i)
+                {
+                    m_AnimationTexture.SetPixel(f.PixelX[i], f.PixelY[i], colors[f.PixelColorIndex[i]]);
+                }
+            }
+            m_AnimationTexture.Apply();
+        }
 
-            int i = Mathf.Min(m_AnimationImageIndex, AnimationImageCount - 1);
-
-            SetTexture(m_AnimationTextureList[i]);
+        public void RefreshAnimationImage()
+        {
+            if (m_AnimationImageCount == 0) return;
+            if (m_AnimationImageIndex >= m_AnimationImageCount)
+            {
+                m_AnimationImageIndex = m_AnimationImageCount - 1;
+            }
+            if (m_AnimationImageIndex != m_AnimationImageIndexPrev)
+            {
+                if (RasterAnimation.UsesELANIC)
+                {
+                    if (m_AnimationImageIndex < m_AnimationImageIndexPrev)
+                    {
+                        // we can only advance forward from previous to current value
+                        // so if the curr is less than prev, we need to rewind to the last imprint
+                        for (int i = m_AnimationImageIndex; i >= 0; --i)
+                        {
+                            if (RasterAnimation.DiffFrames[i].HasImprint)
+                            {
+                                m_AnimationImageIndexPrev = i - 1;
+                                break;
+                            }
+                        }
+                    }
+                    for (int i = m_AnimationImageIndexPrev + 1; i <= m_AnimationImageIndex; ++i)
+                    {
+                        AdvanceAnimationTexture(i);
+                    }
+                }
+                else
+                {
+                    m_AnimationTexture = m_AnimationTextureList[m_AnimationImageIndex];
+                }
+                SetTexture(m_AnimationTexture);
+                m_AnimationImageIndexPrev = m_AnimationImageIndex;
+            }
         }
 
         private void SetTexture(Texture texture)
@@ -340,7 +391,10 @@ namespace _0G.Legacy
             m_AnimationContext = context;
             m_AnimationFrameIndex = 0;
             m_AnimationFrameListIndex = 0;
+            m_AnimationImageCount = rasterAnimation.UsesELANIC ? rasterAnimation.DiffFrames.Count : rasterAnimation.FrameTextures.Count;
             m_AnimationImageIndex = 0;
+            m_AnimationImageIndexPrev = -1;
+            m_AnimationTexture = new Texture2D(rasterAnimation.Dimensions.x, rasterAnimation.Dimensions.y);
             m_AnimationTextureList = rasterAnimation.FrameTextures;
             m_AnimationTimeElapsed = 0;
             RasterAnimation = rasterAnimation;
@@ -362,7 +416,7 @@ namespace _0G.Legacy
 
             OnAnimationSet();
 
-            RefreshGraphic();
+            RefreshAnimationImage();
         }
 
         public void EndAnimation(AnimationContext context)
@@ -383,7 +437,7 @@ namespace _0G.Legacy
         {
             m_Renderer.sharedMaterial = sharedMaterial;
             m_Material = G.U.IsEditMode(this) ? m_Renderer.sharedMaterial : m_Renderer.material; // instance
-            RefreshGraphic();
+            RefreshAnimationImage();
         }
 
         public void SetDamageColor(float seconds)
