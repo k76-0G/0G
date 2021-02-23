@@ -38,7 +38,7 @@ namespace _0G.Legacy
         public string _name = default;
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data", expanded: false)]
+        [FoldoutGroup("$DataSummary", expanded: false)]
 #endif
         [SerializeField]
         [Tooltip("Actions to perform before the sequence starts.")]
@@ -46,14 +46,14 @@ namespace _0G.Legacy
         private List<int> _preSequenceActions = default;
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [Delayed]
         [Tooltip("Commas seperate frames/groups. 1-3-1 means 1,2,3,2,1. 1-3x2-1 means 1-3,3-1 means 1,2,3,3,2,1.")]
         public string _frames = default;
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [SerializeField, ReadOnly]
         [Tooltip("Count of frames in a single playthrough of this sequence.")]
@@ -62,7 +62,7 @@ namespace _0G.Legacy
 #pragma warning restore IDE0052 // Remove unread private members
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [SerializeField, ReadOnly]
         [Tooltip("This is how the code sees your frames input.")]
@@ -74,7 +74,7 @@ namespace _0G.Legacy
         private List<int> _frameList = new List<int>();
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [SerializeField]
         [Tooltip("Count of playthroughs, or \"loops\", of this sequence." +
@@ -84,14 +84,14 @@ namespace _0G.Legacy
         private RangeInt _playCount = new RangeInt();
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [SerializeField]
         [Tooltip("Audio play style, as applicable.")]
         private AudioPlayStyle _audioPlayStyle = default;
 
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Data")]
+        [FoldoutGroup("$DataSummary")]
 #endif
         [SerializeField]
         [Tooltip("Audio event to play upon running this sequence.")]
@@ -133,6 +133,8 @@ namespace _0G.Legacy
         // SHORTCUT PROPERTIES
 
         public string Name { get => _name; set => _name = value; }
+
+        public string DataSummary => string.Format("{0} [{1}x]", _frames, _playCount.DataSummary);
 
         public ReadOnlyCollection<int> FrameList => _frameList.AsReadOnly();
 

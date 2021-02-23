@@ -13,6 +13,16 @@ namespace _0G.Legacy
         [FormerlySerializedAs("m_maxValue")]
         int _maxValue;
 
+        public string DataSummary
+        {
+            get
+            {
+                int min = _minValue + (_minInclusive ? 0 : 1);
+                int max = _maxValue - (_maxInclusive ? 0 : 1);
+                return (min == max) ? min.ToString() : min + "~" + max;
+            }
+        }
+
         public int minValue
         {
             get { return _minValue; }
