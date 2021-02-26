@@ -23,5 +23,22 @@ namespace _0G.Legacy
             int ri = Random.Range(0, options.Count);
             return options[ri];
         }
+
+        public static T Pick<T>(T[] options, float[] weights)
+        {
+            float sum = 0;
+            for (int i = 0; i < weights.Length; ++i)
+            {
+                sum += weights[i];
+            }
+            float rf = Random.Range(0f, sum);
+            float val = 0;
+            for (int i = 0; i < weights.Length; ++i)
+            {
+                val += weights[i];
+                if (rf <= val) return options[i];
+            }
+            throw new System.Exception();
+        }
     }
 }
