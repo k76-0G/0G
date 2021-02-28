@@ -307,7 +307,23 @@ namespace _0G.Legacy
                 List<Color> colors = RasterAnimation.Colors;
                 for (int i = 0; i < f.DiffPixelCount; ++i)
                 {
-                    m_AnimationTexture.SetPixel(f.PixelX[i], f.PixelY[i], colors[f.PixelColorIndex[i]]);
+                    int x = f.PixelX[i];
+                    int y = f.PixelY[i];
+                    int colorIndex = f.PixelColorIndex[i];
+                    // handle compressed data
+                    if (colorIndex == -1)
+                    {
+                        // -1 means fill the same color as prev pixel diff on same row
+                        // all the way up to and including this x position
+                        int pvx = f.PixelX[i - 1];
+                        colorIndex = f.PixelColorIndex[i - 1];
+                        for (int j = pvx + 1; j < x; ++j)
+                        {
+                            m_AnimationTexture.SetPixel(j, y, colors[colorIndex]);
+                        }
+                    }
+                    // set the current pixel
+                    m_AnimationTexture.SetPixel(x, y, colors[colorIndex]);
                 }
             }
             m_AnimationTexture.Apply();

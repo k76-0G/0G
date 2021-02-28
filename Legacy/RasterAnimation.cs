@@ -319,6 +319,16 @@ namespace _0G.Legacy
 #endif
         public void ConvertToELANIC()
         {
+            /* ELANIC requirements for PNG images:
+            
+               do not scale to power of 2
+               read/write enabled
+               max texture size: 8192
+               do not crunch compress
+               do not compress
+
+               TODO: Compression process should make these changes automatically.
+             */
             m_Imprints.Clear();
             m_Colors.Clear();
             m_Colors.Add(Color.clear); // color index 0
@@ -352,6 +362,10 @@ namespace _0G.Legacy
                         Color c = currColors[j];
                         if (c != prevColors[j])
                         {
+                            // determine x and y positions
+                            int x = j % Dimensions.x;
+                            int y = j / Dimensions.x;
+                            // determine color index, adding color to table if needed
                             int colorIndex;
                             if (c.a.Ap(0)) // optimization
                             {
@@ -366,8 +380,28 @@ namespace _0G.Legacy
                                     m_Colors.Add(c);
                                 }
                             }
-                            pixelX.Add((ushort)(j % Dimensions.x));
-                            pixelY.Add((ushort)(j / Dimensions.x));
+                            // check the previous pixel's data in order to compress data
+                            int pvi = pixelColorIndex.Count - 1;
+                            if (pvi >= 0 && pixelX[pvi] == x - 1 && pixelY[pvi] == y)
+                            {
+                                // optimize using negative color indices:
+                                // -1 means fill the same color as prev pixel diff on same row
+                                // all the way up to and including this x position
+                                if (pixelColorIndex[pvi] == colorIndex)
+                                {
+                                    colorIndex = -1;
+                                }
+                                else if (pixelColorIndex[pvi] == -1 && pixelColorIndex[pvi - 1] == colorIndex)
+                                {
+                                    pixelX.RemoveAt(pvi);
+                                    pixelY.RemoveAt(pvi);
+                                    pixelColorIndex.RemoveAt(pvi);
+                                    colorIndex = -1;
+                                }
+                            }
+                            // add the current pixel's data
+                            pixelX.Add((ushort)x);
+                            pixelY.Add((ushort)y);
                             pixelColorIndex.Add((sbyte)colorIndex);
                         }
                     }
