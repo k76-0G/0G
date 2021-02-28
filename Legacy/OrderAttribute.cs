@@ -1,6 +1,6 @@
 ﻿namespace _0G.Legacy
 {
-#if KRG_X_ODIN
+#if ODIN_INSPECTOR
     public class OrderAttribute : Sirenix.OdinInspector.PropertyOrderAttribute
     {
         public OrderAttribute(int order) : base(order) { }

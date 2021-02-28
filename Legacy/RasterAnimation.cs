@@ -79,17 +79,17 @@ namespace _0G.Legacy
 
         [Header("Looping")]
 
-        [Order(10)]
+        [Order(-5)]
         [FormerlySerializedAs("m_loop")]
         public bool _loop = true;
 
-        [Order(10)]
+        [Order(-5)]
         [SerializeField]
         [Tooltip("Checked: How many ADDITIONAL times to play this animation. Unchecked: Loop indefinitely.")]
         [BoolObjectDisable(false, "Infinite Loop")]
         private BoolInt _loopCount = new BoolInt(false, 1);
 
-        [Order(10)]
+        [Order(-5)]
         [SerializeField]
         [Tooltip("Index of the frame sequence from which to start any loops.")]
         private int _loopToSequence = default;
@@ -98,11 +98,8 @@ namespace _0G.Legacy
 
         [Header("Frame Sequence Editor")]
 
-        [Order(15), SerializeField, TextArea(6, 24)]
+        [Order(0), SerializeField, TextArea(6, 24)]
         protected string m_FrameParagraph = default;
-
-        [Order(15), SerializeField]
-        private bool m_FrameParagraphParse = default;
 
         //--
 
@@ -163,12 +160,6 @@ namespace _0G.Legacy
             // validate _loopToSequence
             int max = (_frameSequences == null || _frameSequences.Length == 0) ? 0 : _frameSequences.Length - 1;
             _loopToSequence = Mathf.Clamp(_loopToSequence, 0, max);
-
-            if (m_FrameParagraphParse)
-            {
-                m_FrameParagraphParse = false;
-                ParseFrameParagraph();
-            }
 
             if (_frameSequences != null)
             {
@@ -290,7 +281,10 @@ namespace _0G.Legacy
             hasPlayableFrameSequences = false;
         }
 
-        private void ParseFrameParagraph()
+#if ODIN_INSPECTOR
+        [Button(ButtonSizes.Large)]
+#endif
+        public void ParseFrameParagraph()
         {
             if (string.IsNullOrEmpty(m_FrameParagraph)) return;
 
@@ -307,7 +301,7 @@ namespace _0G.Legacy
             string[] lines = m_FrameParagraph.Split(sep, 24);
             FrameSequence[] newArray = new FrameSequence[_frameSequences.Length + lines.Length];
 
-            _frameSequences.CopyTo(newArray, _frameSequences.Length);
+            _frameSequences.CopyTo(newArray, 0);
 
             for (int i = 0; i < lines.Length; ++i)
             {
@@ -323,7 +317,7 @@ namespace _0G.Legacy
 #if ODIN_INSPECTOR
         [Button(ButtonSizes.Large)]
 #endif
-        public void CompressImages()
+        public void ConvertToELANIC()
         {
             m_Imprints.Clear();
             m_Colors.Clear();
