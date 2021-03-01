@@ -46,7 +46,7 @@ namespace _0G.Legacy
 
             if (string.IsNullOrWhiteSpace(FullName))
             {
-                FullName = FileName;
+                FullName = ProperName;
             }
 
             if (string.IsNullOrWhiteSpace(GraphicData.IdleAnimationName))
