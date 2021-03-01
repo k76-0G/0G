@@ -300,7 +300,7 @@ namespace _0G.Legacy
             RasterDiffFrame f = RasterAnimation.DiffFrames[imageIndex];
             if (f.HasImprint)
             {
-                m_AnimationTexture.SetPixels32(RasterAnimation.Imprints[f.ImprintIndex].GetPixels32());
+                Graphics.CopyTexture(RasterAnimation.Imprints[f.ImprintIndex], m_AnimationTexture);
             }
             else
             {
@@ -325,8 +325,8 @@ namespace _0G.Legacy
                     // set the current pixel
                     m_AnimationTexture.SetPixel(x, y, colors[colorIndex]);
                 }
+                m_AnimationTexture.Apply();
             }
-            m_AnimationTexture.Apply();
         }
 
         public void RefreshAnimationImage()
@@ -410,7 +410,7 @@ namespace _0G.Legacy
             m_AnimationImageCount = rasterAnimation.UsesELANIC ? rasterAnimation.DiffFrames.Count : rasterAnimation.FrameTextures.Count;
             m_AnimationImageIndex = 0;
             m_AnimationImageIndexPrev = -1;
-            m_AnimationTexture = new Texture2D(rasterAnimation.Dimensions.x, rasterAnimation.Dimensions.y);
+            m_AnimationTexture = new Texture2D(rasterAnimation.Dimensions.x, rasterAnimation.Dimensions.y, TextureFormat.RGBA32, 1, false);
             m_AnimationTextureList = rasterAnimation.FrameTextures;
             m_AnimationTimeElapsed = 0;
             RasterAnimation = rasterAnimation;
