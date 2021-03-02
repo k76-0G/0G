@@ -52,11 +52,7 @@ namespace _0G.Legacy
 
         private int m_AnimationImageIndex;
 
-        private int m_AnimationImageIndexPrev = -1;
-
-        private Texture2D m_AnimationTexture;
-
-        private List<Texture2D> m_AnimationTextureList;
+        private Texture2D[] m_AnimationTextures;
 
         private float m_AnimationTimeElapsed;
 
@@ -222,6 +218,8 @@ namespace _0G.Legacy
 
             RemoveCharacterStateHandlers();
 
+            DestroyGeneratedTextures();
+
             if (G.U.IsPlayMode(this))
             {
                 DestroyImmediate(m_Material);
@@ -295,15 +293,13 @@ namespace _0G.Legacy
 
         // MAIN METHODS
 
-        public void AdvanceAnimationTexture(int imageIndex)
+        private void PopulateELANICTexture(int imageIndex)
         {
             RasterDiffFrame f = RasterAnimation.DiffFrames[imageIndex];
-            if (f.HasImprint)
+            if (f.HasDiffData)
             {
-                Graphics.CopyTexture(RasterAnimation.Imprints[f.ImprintIndex], m_AnimationTexture);
-            }
-            else
-            {
+                Texture2D tex = new Texture2D(RasterAnimation.Dimensions.x, RasterAnimation.Dimensions.y, TextureFormat.RGBA32, 1, false);
+                Graphics.CopyTexture(RasterAnimation.Imprints[f.ImprintIndex], tex);
                 List<Color> colors = RasterAnimation.Colors;
                 for (int i = 0; i < f.DiffPixelCount; ++i)
                 {
@@ -319,52 +315,30 @@ namespace _0G.Legacy
                         colorIndex = f.PixelColorIndex[i - 1];
                         for (int j = pvx + 1; j < x; ++j)
                         {
-                            m_AnimationTexture.SetPixel(j, y, colors[colorIndex]);
+                            tex.SetPixel(j, y, colors[colorIndex]);
                         }
                     }
                     // set the current pixel
-                    m_AnimationTexture.SetPixel(x, y, colors[colorIndex]);
+                    tex.SetPixel(x, y, colors[colorIndex]);
                 }
-                m_AnimationTexture.Apply();
+                tex.Apply();
+                m_AnimationTextures[imageIndex] = tex;
+            }
+            else
+            {
+                m_AnimationTextures[imageIndex] = RasterAnimation.Imprints[f.ImprintIndex];
             }
         }
 
         public void RefreshAnimationImage()
         {
             if (m_AnimationImageCount == 0) return;
-            if (m_AnimationImageIndex >= m_AnimationImageCount)
+            m_AnimationImageIndex = Mathf.Min(m_AnimationImageIndex, m_AnimationImageCount - 1);
+            if (RasterAnimation.UsesELANIC && m_AnimationTextures[m_AnimationImageIndex] == null)
             {
-                m_AnimationImageIndex = m_AnimationImageCount - 1;
+                PopulateELANICTexture(m_AnimationImageIndex);
             }
-            if (m_AnimationImageIndex != m_AnimationImageIndexPrev)
-            {
-                if (RasterAnimation.UsesELANIC)
-                {
-                    if (m_AnimationImageIndex < m_AnimationImageIndexPrev)
-                    {
-                        // we can only advance forward from previous to current value
-                        // so if the curr is less than prev, we need to rewind to the last imprint
-                        for (int i = m_AnimationImageIndex; i >= 0; --i)
-                        {
-                            if (RasterAnimation.DiffFrames[i].HasImprint)
-                            {
-                                m_AnimationImageIndexPrev = i - 1;
-                                break;
-                            }
-                        }
-                    }
-                    for (int i = m_AnimationImageIndexPrev + 1; i <= m_AnimationImageIndex; ++i)
-                    {
-                        AdvanceAnimationTexture(i);
-                    }
-                }
-                else
-                {
-                    m_AnimationTexture = m_AnimationTextureList[m_AnimationImageIndex];
-                }
-                SetTexture(m_AnimationTexture);
-                m_AnimationImageIndexPrev = m_AnimationImageIndex;
-            }
+            SetTexture(m_AnimationTextures[m_AnimationImageIndex]);
         }
 
         private void SetTexture(Texture texture)
@@ -401,6 +375,8 @@ namespace _0G.Legacy
                 OnAnimationEnd(false, false);
             }
 
+            DestroyGeneratedTextures();
+
             OnAnimationClear();
 
             m_AnimationCallback = callback;
@@ -409,9 +385,7 @@ namespace _0G.Legacy
             m_AnimationFrameListIndex = 0;
             m_AnimationImageCount = rasterAnimation.UsesELANIC ? rasterAnimation.DiffFrames.Count : rasterAnimation.FrameTextures.Count;
             m_AnimationImageIndex = 0;
-            m_AnimationImageIndexPrev = -1;
-            m_AnimationTexture = new Texture2D(rasterAnimation.Dimensions.x, rasterAnimation.Dimensions.y, TextureFormat.RGBA32, 1, false);
-            m_AnimationTextureList = rasterAnimation.FrameTextures;
+            m_AnimationTextures = rasterAnimation.UsesELANIC ? new Texture2D[m_AnimationImageCount] : rasterAnimation.FrameTextures.ToArray();
             m_AnimationTimeElapsed = 0;
             RasterAnimation = rasterAnimation;
 
@@ -467,6 +441,18 @@ namespace _0G.Legacy
 #else
             G.U.Err("This function requires DG.Tweening (DOTween).");
 #endif
+        }
+
+        private void DestroyGeneratedTextures()
+        {
+            if (RasterAnimation != null && RasterAnimation.UsesELANIC)
+            {
+                for (int i = 0; i < m_AnimationImageCount; ++i)
+                {
+                    RasterDiffFrame f = RasterAnimation.DiffFrames[i];
+                    if (f.HasDiffData) Destroy(m_AnimationTextures[i]);
+                }
+            }
         }
 
         // RENDER METHODS

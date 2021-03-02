@@ -338,19 +338,20 @@ namespace _0G.Legacy
             {
                 Texture2D tex = m_FrameTextures[i];
                 currColors = tex.GetPixels();
-                bool useImprint = false;
+                bool createImprint = false;
                 for (int j = 0; j < frameSequenceCount; ++j)
                 {
                     if (i == _frameSequences[j].FrameList[0] - 1)
                     {
-                        useImprint = true;
+                        createImprint = true;
                         break;
                     }
                 }
-                if (useImprint)
+                if (createImprint)
                 {
-                    m_DiffFrames.Add(new RasterDiffFrame { HasImprint = true, ImprintIndex = m_Imprints.Count });
+                    m_DiffFrames.Add(new RasterDiffFrame { ImprintIndex = m_Imprints.Count });
                     m_Imprints.Add(tex);
+                    prevColors = currColors;
                 }
                 else
                 {
@@ -407,13 +408,13 @@ namespace _0G.Legacy
                     }
                     m_DiffFrames.Add(new RasterDiffFrame
                     {
+                        ImprintIndex = m_Imprints.Count - 1,
                         PixelX = pixelX.ToArray(),
                         PixelY = pixelY.ToArray(),
                         PixelColorIndex = pixelColorIndex.ToArray(),
                     });
                     // TODO: destroy m_FrameTextures asset on disk
                 }
-                prevColors = currColors;
             }
             // TODO: m_FrameTextures.Clear();
             m_UsesELANIC = true;

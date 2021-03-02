@@ -9,7 +9,6 @@ namespace _0G
     [System.Serializable]
     public struct RasterDiffFrame
     {
-        public bool HasImprint;
         public int ImprintIndex;
         
         [HideInInspector]
@@ -24,6 +23,6 @@ namespace _0G
 #endif
         public int DiffPixelCount => PixelColorIndex?.Length ?? 0;
 
-        // can have both imprint/pixels and can wrap around from end to beginning
+        public bool HasDiffData => DiffPixelCount > 0;
     }
 }
