@@ -293,9 +293,9 @@ namespace _0G.Legacy
 
         // MAIN METHODS
 
-        private void PopulateELANICTexture(int imageIndex)
+        private void PopulateElanicTexture(int imageIndex)
         {
-            RasterDiffFrame f = RasterAnimation.DiffFrames[imageIndex];
+            ElanicFrame f = RasterAnimation.ElanicFrames[imageIndex];
             if (f.HasDiffData)
             {
                 Texture2D tex = new Texture2D(RasterAnimation.Dimensions.x, RasterAnimation.Dimensions.y, TextureFormat.RGBA32, 1, false);
@@ -334,9 +334,9 @@ namespace _0G.Legacy
         {
             if (m_AnimationImageCount == 0) return;
             m_AnimationImageIndex = Mathf.Min(m_AnimationImageIndex, m_AnimationImageCount - 1);
-            if (RasterAnimation.UsesELANIC && m_AnimationTextures[m_AnimationImageIndex] == null)
+            if (RasterAnimation.UsesElanic && m_AnimationTextures[m_AnimationImageIndex] == null)
             {
-                PopulateELANICTexture(m_AnimationImageIndex);
+                PopulateElanicTexture(m_AnimationImageIndex);
             }
             SetTexture(m_AnimationTextures[m_AnimationImageIndex]);
         }
@@ -383,9 +383,9 @@ namespace _0G.Legacy
             m_AnimationContext = context;
             m_AnimationFrameIndex = 0;
             m_AnimationFrameListIndex = 0;
-            m_AnimationImageCount = rasterAnimation.UsesELANIC ? rasterAnimation.DiffFrames.Count : rasterAnimation.FrameTextures.Count;
+            m_AnimationImageCount = rasterAnimation.UsesElanic ? rasterAnimation.ElanicFrames.Count : rasterAnimation.FrameTextures.Count;
             m_AnimationImageIndex = 0;
-            m_AnimationTextures = rasterAnimation.UsesELANIC ? new Texture2D[m_AnimationImageCount] : rasterAnimation.FrameTextures.ToArray();
+            m_AnimationTextures = rasterAnimation.UsesElanic ? new Texture2D[m_AnimationImageCount] : rasterAnimation.FrameTextures.ToArray();
             m_AnimationTimeElapsed = 0;
             RasterAnimation = rasterAnimation;
 
@@ -445,11 +445,11 @@ namespace _0G.Legacy
 
         private void DestroyGeneratedTextures()
         {
-            if (RasterAnimation != null && RasterAnimation.UsesELANIC)
+            if (RasterAnimation != null && RasterAnimation.UsesElanic)
             {
                 for (int i = 0; i < m_AnimationImageCount; ++i)
                 {
-                    RasterDiffFrame f = RasterAnimation.DiffFrames[i];
+                    ElanicFrame f = RasterAnimation.ElanicFrames[i];
                     if (f.HasDiffData) Destroy(m_AnimationTextures[i]);
                 }
             }

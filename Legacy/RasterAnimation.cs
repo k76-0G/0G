@@ -47,21 +47,9 @@ namespace _0G.Legacy
         [SerializeField]
         protected List<Texture2D> m_FrameTextures = new List<Texture2D>();
 
-        [HideInInspector]
-        [SerializeField]
-        protected bool m_UsesELANIC = default; // Experimental Lossless Animation Compression
-
         [Order(-10)]
         [SerializeField]
-        protected List<Texture2D> m_Imprints = new List<Texture2D>();
-
-        [Order(-10)]
-        [SerializeField]
-        protected List<Color> m_Colors = new List<Color>();
-
-        [Order(-10)]
-        [SerializeField]
-        protected List<RasterDiffFrame> m_DiffFrames = new List<RasterDiffFrame>();
+        protected ElanicData m_ElanicData = default; 
 
         //--
 
@@ -114,11 +102,11 @@ namespace _0G.Legacy
 
         // PROPERTIES
 
-        public virtual List<Color> Colors => m_Colors;
+        public virtual List<Color> Colors => m_ElanicData.Colors;
 
         public virtual Vector2Int Dimensions => m_Dimensions;
 
-        public virtual List<RasterDiffFrame> DiffFrames => m_DiffFrames;
+        public virtual List<ElanicFrame> ElanicFrames => m_ElanicData.Frames;
 
         public virtual float FrameRate => m_SecondsPerFrame > 0 ? 1f / m_SecondsPerFrame : DEFAULT_SPRITE_FPS;
 
@@ -132,11 +120,11 @@ namespace _0G.Legacy
 
         public virtual bool hasPlayableFrameSequences { get; private set; }
 
-        public virtual List<Texture2D> Imprints => m_Imprints;
+        public virtual List<Texture2D> Imprints => m_ElanicData.Imprints;
 
         public virtual int loopToSequence { get { return _loopToSequence; } }
 
-        public virtual bool UsesELANIC => m_UsesELANIC;
+        public virtual bool UsesElanic => m_ElanicData != null;
 
         // MONOBEHAVIOUR METHODS
 
@@ -314,25 +302,9 @@ namespace _0G.Legacy
             m_FrameParagraph = "";
         }
 
-#if ODIN_INSPECTOR
-        [Button(ButtonSizes.Large)]
-#endif
-        public void ConvertToELANIC()
+        public void ConvertToElanic(ElanicData data)
         {
-            /* ELANIC requirements for PNG images:
-            
-               do not scale to power of 2
-               read/write enabled
-               max texture size: 8192
-               do not crunch compress
-               do not compress
-
-               TODO: Compression process should make these changes automatically.
-             */
-            m_Imprints.Clear();
-            m_Colors.Clear();
-            m_Colors.Add(Color.clear); // color index 0
-            m_DiffFrames.Clear();
+            data.Colors.Add(Color.clear); // color index 0
             Color[] currColors, prevColors = null;
             for (int i = 0; i < m_FrameTextures.Count; ++i)
             {
@@ -349,8 +321,8 @@ namespace _0G.Legacy
                 }
                 if (createImprint)
                 {
-                    m_DiffFrames.Add(new RasterDiffFrame { ImprintIndex = m_Imprints.Count });
-                    m_Imprints.Add(tex);
+                    data.Frames.Add(new ElanicFrame { ImprintIndex = data.Imprints.Count});
+                    data.Imprints.Add(tex);
                     prevColors = currColors;
                 }
                 else
@@ -374,11 +346,11 @@ namespace _0G.Legacy
                             }
                             else
                             {
-                                colorIndex = m_Colors.IndexOf(c);
+                                colorIndex = data.Colors.IndexOf(c);
                                 if (colorIndex < 0)
                                 {
-                                    colorIndex = m_Colors.Count;
-                                    m_Colors.Add(c);
+                                    colorIndex = data.Colors.Count;
+                                    data.Colors.Add(c);
                                 }
                             }
                             // check the previous pixel's data in order to compress data
@@ -406,9 +378,9 @@ namespace _0G.Legacy
                             pixelColorIndex.Add((sbyte)colorIndex);
                         }
                     }
-                    m_DiffFrames.Add(new RasterDiffFrame
+                    data.Frames.Add(new ElanicFrame
                     {
-                        ImprintIndex = m_Imprints.Count - 1,
+                        ImprintIndex = data.Imprints.Count - 1,
                         PixelX = pixelX.ToArray(),
                         PixelY = pixelY.ToArray(),
                         PixelColorIndex = pixelColorIndex.ToArray(),
@@ -417,7 +389,7 @@ namespace _0G.Legacy
                 }
             }
             // TODO: m_FrameTextures.Clear();
-            m_UsesELANIC = true;
+            m_ElanicData = data;
         }
     }
 }

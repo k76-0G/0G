@@ -1,13 +1,13 @@
-﻿#if ODIN_INSPECTOR
+﻿using UnityEngine;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-
-using UnityEngine;
 
 namespace _0G
 {
     [System.Serializable]
-    public struct RasterDiffFrame
+    public struct ElanicFrame
     {
         public int ImprintIndex;
         
