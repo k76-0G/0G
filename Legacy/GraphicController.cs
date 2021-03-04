@@ -299,28 +299,33 @@ namespace _0G.Legacy
             if (f.HasDiffData)
             {
                 Texture2D tex = new Texture2D(RasterAnimation.Dimensions.x, RasterAnimation.Dimensions.y, TextureFormat.RGBA32, 1, false);
-                Graphics.CopyTexture(RasterAnimation.Imprints[f.ImprintIndex], tex);
-                List<Color> colors = RasterAnimation.Colors;
+                //Graphics.CopyTexture(RasterAnimation.Imprints[f.ImprintIndex], tex);
+                Color32[] pixels = RasterAnimation.Imprints[f.ImprintIndex].GetPixels32();
+                List<Color32> colors = RasterAnimation.Colors;
                 for (int i = 0; i < f.DiffPixelCount; ++i)
                 {
-                    int x = f.PixelX[i];
-                    int y = f.PixelY[i];
-                    int colorIndex = f.PixelColorIndex[i];
-                    // handle compressed data
+                    uint p = f.DiffPixelPosition[i];
+                    sbyte colorIndex = f.DiffPixelColorIndex[i];
+                    // negative numbers are compressed data
+                    // positive numbers including 0 are standard data
                     if (colorIndex == -1)
                     {
-                        // -1 means fill the same color as prev pixel diff on same row
+                        // -1 means fill the same color as prev pixel diff
                         // all the way up to and including this x position
-                        int pvx = f.PixelX[i - 1];
-                        colorIndex = f.PixelColorIndex[i - 1];
-                        for (int j = pvx + 1; j < x; ++j)
+                        uint pvp = f.DiffPixelPosition[i - 1];
+                        colorIndex = f.DiffPixelColorIndex[i - 1];
+                        for (uint j = pvp + 1; j <= p; ++j)
                         {
-                            tex.SetPixel(j, y, colors[colorIndex]);
+                            pixels[j] = colors[colorIndex];
                         }
                     }
-                    // set the current pixel
-                    tex.SetPixel(x, y, colors[colorIndex]);
+                    else
+                    {
+                        // set the current pixel
+                        pixels[p] = colors[colorIndex];
+                    }
                 }
+                tex.SetPixels32(pixels);
                 tex.Apply();
                 m_AnimationTextures[imageIndex] = tex;
             }
@@ -389,6 +394,14 @@ namespace _0G.Legacy
             m_AnimationTimeElapsed = 0;
             RasterAnimation = rasterAnimation;
 
+            if (rasterAnimation.UsesElanic && m_Body.IsGalleryAnimation)
+            {
+                for (int i = 0; i < m_AnimationImageCount; ++i)
+                {
+                    PopulateElanicTexture(i);
+                }
+            }
+
             if (G.U.IsPlayMode(this))
             {
                 RasterAnimationOptions options = new RasterAnimationOptions
@@ -408,6 +421,8 @@ namespace _0G.Legacy
 
             RefreshAnimationImage();
         }
+
+        public void RestartAnimation() => m_RasterAnimationState.Reset();
 
         public void EndAnimation(AnimationContext context)
         {

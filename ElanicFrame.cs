@@ -12,16 +12,14 @@ namespace _0G
         public int ImprintIndex;
         
         [HideInInspector]
-        public ushort[] PixelX;
+        public uint[] DiffPixelPosition;
         [HideInInspector]
-        public ushort[] PixelY;
-        [HideInInspector]
-        public sbyte[] PixelColorIndex;
+        public sbyte[] DiffPixelColorIndex;
 
 #if ODIN_INSPECTOR
         [ShowInInspector]
 #endif
-        public int DiffPixelCount => PixelColorIndex?.Length ?? 0;
+        public int DiffPixelCount => DiffPixelColorIndex?.Length ?? 0;
 
         public bool HasDiffData => DiffPixelCount > 0;
     }

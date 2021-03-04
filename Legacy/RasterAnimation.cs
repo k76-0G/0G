@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -45,11 +45,11 @@ namespace _0G.Legacy
 
         [Order(-10)]
         [SerializeField]
-        protected List<Texture2D> m_FrameTextures = new List<Texture2D>();
+        protected ElanicData m_ElanicData = default;
 
         [Order(-10)]
         [SerializeField]
-        protected ElanicData m_ElanicData = default; 
+        protected List<Texture2D> m_FrameTextures = new List<Texture2D>();
 
         //--
 
@@ -102,7 +102,7 @@ namespace _0G.Legacy
 
         // PROPERTIES
 
-        public virtual List<Color> Colors => m_ElanicData.Colors;
+        public virtual List<Color32> Colors => m_ElanicData.Colors;
 
         public virtual Vector2Int Dimensions => m_Dimensions;
 
@@ -305,11 +305,11 @@ namespace _0G.Legacy
         public void ConvertToElanic(ElanicData data)
         {
             data.Colors.Add(Color.clear); // color index 0
-            Color[] currColors, prevColors = null;
+            Color32[] currColors, prevColors = null;
             for (int i = 0; i < m_FrameTextures.Count; ++i)
             {
                 Texture2D tex = m_FrameTextures[i];
-                currColors = tex.GetPixels();
+                currColors = tex.GetPixels32();
                 bool createImprint = false;
                 for (int j = 0; j < frameSequenceCount; ++j)
                 {
@@ -327,20 +327,16 @@ namespace _0G.Legacy
                 }
                 else
                 {
-                    List<ushort> pixelX = new List<ushort>();
-                    List<ushort> pixelY = new List<ushort>();
+                    List<uint> pixelPosition = new List<uint>();
                     List<sbyte> pixelColorIndex = new List<sbyte>();
-                    for (int j = 0; j < currColors.Length; ++j)
+                    for (int p = 0; p < currColors.Length; ++p)
                     {
-                        Color c = currColors[j];
-                        if (c != prevColors[j])
+                        Color32 c = currColors[p];
+                        if (!c.Equals(prevColors[p]))
                         {
-                            // determine x and y positions
-                            int x = j % Dimensions.x;
-                            int y = j / Dimensions.x;
                             // determine color index, adding color to table if needed
                             int colorIndex;
-                            if (c.a.Ap(0)) // optimization
+                            if (c.a == 0) // optimization
                             {
                                 colorIndex = 0;
                             }
@@ -355,7 +351,7 @@ namespace _0G.Legacy
                             }
                             // check the previous pixel's data in order to compress data
                             int pvi = pixelColorIndex.Count - 1;
-                            if (pvi >= 0 && pixelX[pvi] == x - 1 && pixelY[pvi] == y)
+                            if (pvi >= 0 && pixelPosition[pvi] == p - 1)
                             {
                                 // optimize using negative color indices:
                                 // -1 means fill the same color as prev pixel diff on same row
@@ -366,24 +362,21 @@ namespace _0G.Legacy
                                 }
                                 else if (pixelColorIndex[pvi] == -1 && pixelColorIndex[pvi - 1] == colorIndex)
                                 {
-                                    pixelX.RemoveAt(pvi);
-                                    pixelY.RemoveAt(pvi);
+                                    pixelPosition.RemoveAt(pvi);
                                     pixelColorIndex.RemoveAt(pvi);
                                     colorIndex = -1;
                                 }
                             }
                             // add the current pixel's data
-                            pixelX.Add((ushort)x);
-                            pixelY.Add((ushort)y);
+                            pixelPosition.Add((uint)p);
                             pixelColorIndex.Add((sbyte)colorIndex);
                         }
                     }
                     data.Frames.Add(new ElanicFrame
                     {
                         ImprintIndex = data.Imprints.Count - 1,
-                        PixelX = pixelX.ToArray(),
-                        PixelY = pixelY.ToArray(),
-                        PixelColorIndex = pixelColorIndex.ToArray(),
+                        DiffPixelPosition = pixelPosition.ToArray(),
+                        DiffPixelColorIndex = pixelColorIndex.ToArray(),
                     });
                     // TODO: destroy m_FrameTextures asset on disk
                 }

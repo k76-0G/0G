@@ -7,6 +7,7 @@ using Sirenix.OdinInspector;
 
 namespace _0G
 {
+    [PreferBinarySerialization]
     public class ElanicData : ScriptableObject
     {
 #if ODIN_INSPECTOR
@@ -15,7 +16,7 @@ namespace _0G
         public int serializedVersion = 1;
 
         public List<Texture2D> Imprints = new List<Texture2D>();
-        public List<Color> Colors = new List<Color>();
+        public List<Color32> Colors = new List<Color32>();
         public List<ElanicFrame> Frames = new List<ElanicFrame>();
     }
 }

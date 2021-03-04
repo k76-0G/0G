@@ -57,6 +57,7 @@ namespace _0G
             if (Directory.Exists(dataPath)) AssetDatabase.DeleteAsset(dataPath);
             AssetDatabase.CreateAsset(data, dataPath);
             EditorUtility.SetDirty(data);
+            EditorUtility.SetDirty(m_RasterAnimation);
             m_RasterAnimation.ConvertToElanic(data);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
