@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace _0G.Legacy
 {
     /// <summary>
@@ -45,6 +49,14 @@ namespace _0G.Legacy
         [Tooltip("The prefab that will be instantiated upon attacking.")]
         protected Attack _attackPrefab;
 
+        [SerializeField]
+        [Tooltip("An auxiliary attack will not change the attacker's state or animation;" +
+            " it will carry out concurrent with regular (main) attacks and cannot use attack strings.")]
+        protected bool _isAuxiliaryAttack = default;
+
+#if ODIN_INSPECTOR
+        [HideIf("_isAuxiliaryAttack")]
+#endif
         [SerializeField]
         [Tooltip("The attacker's animation(s) during the attack.")]
         protected AnimationData[] _attackerAnimations;
@@ -120,6 +132,9 @@ namespace _0G.Legacy
         //
         [Header("Combos & Strings")]
 
+#if ODIN_INSPECTOR
+        [HideIf("_isAuxiliaryAttack")]
+#endif
         [SerializeField]
         [Tooltip("Attack strings associated with this ability while an instance of this attack is active.")]
         protected AttackString[] _attackStrings;
@@ -280,7 +295,7 @@ namespace _0G.Legacy
 
         public virtual bool causesKnockBack { get { return _causesKnockBack; } }
 
-        public virtual bool HasAttackerAnimations => attackerAnimationCount > 0;
+        public virtual bool HasAttackerAnimations => !_isAuxiliaryAttack && attackerAnimationCount > 0;
 
         public virtual bool hasAttackLifetime { get { return _attackLifetime.boolValue; } }
 
@@ -289,6 +304,8 @@ namespace _0G.Legacy
         public virtual float hpDamage { get { return _hpDamage; } }
 
         public virtual InputSignature inputSignature { get { return _inputSignature; } }
+
+        public virtual bool IsAuxiliaryAttack => _isAuxiliaryAttack;
 
         public virtual bool isDPSClone => _isDPSClone;
 

@@ -47,6 +47,8 @@ namespace _0G.Legacy
 
         public bool IsDisposed { get; private set; }
 
+        public bool IsMain => !_attackAbility.IsAuxiliaryAttack;
+
         public GameObjectBody Body => m_Body;
 
         private Hitbox Hitbox => m_Body.Refs.Hitbox;

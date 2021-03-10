@@ -172,14 +172,18 @@ namespace _0G.Legacy
             if (attack == null) return false;
             //...otherwise, the attack attempt succeeded!
 
-            //first, interrupt the current attack (if applicable)
-            EndCurrentAttack(false);
-
-            //now, set up the NEW current attack
-            CurrentAttack = attack;
+            //handle a main attack
+            if (attack.IsMain)
+            {
+                //first, interrupt the current attack (if applicable)
+                EndCurrentAttack(false);
+                //now, set up the NEW current attack
+                CurrentAttack = attack;
+                UpdateAvailableAttacks(attack);
+            }
+            //finish set up of attack
             attack.Destroyed += OnAttackDestroy;
             attack.damageDealtHandler = OnDamageDealt;
-            UpdateAvailableAttacks(attack);
             //call optional derived functionality (high priority), then fire event as applicable
             OnAttackStart(attack);
             AttackStarted?.Invoke(attack);
@@ -201,7 +205,7 @@ namespace _0G.Legacy
             if (attack == null) return;
 
             //unset attacker animation
-            if (m_IsAttackerAnimating && attack.attackAbility.HasAttackerAnimations)
+            if (m_IsAttackerAnimating)
             {
                 m_IsAttackerAnimating = false;
                 GraphicController.EndAnimation(AnimationContext.Attack);
@@ -256,7 +260,7 @@ namespace _0G.Legacy
         private void OnAttackerAnimationEnd(GraphicController graphicController, bool isCompleted)
         {
             //check m_IsAttackerAnimating to avoid looping via GraphicController.EndAnimation/EndCurrentAttack
-            if (m_IsAttackerAnimating && CurrentAttack != null && CurrentAttack.attackAbility.HasAttackerAnimations)
+            if (m_IsAttackerAnimating)
             {
                 m_IsAttackerAnimating = false;
                 EndCurrentAttack(isCompleted);
@@ -265,9 +269,12 @@ namespace _0G.Legacy
 
         private void OnAttackDestroy(Attack attack)
         {
-            G.U.Assert(attack == CurrentAttack);
-            //the current attack has been destroyed by external forces, so end it
-            EndCurrentAttack(attack.IsCompleted);
+            if (attack.IsMain)
+            {
+                G.U.Assert(attack == CurrentAttack);
+                //the current attack has been destroyed by external forces, so end it
+                EndCurrentAttack(attack.IsCompleted);
+            }
         }
 
         protected virtual void OnAttackStart(Attack attack) { }
