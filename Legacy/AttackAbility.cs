@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -111,6 +111,10 @@ namespace _0G.Legacy
         [Tooltip("Distance traveled by attack in units per second (the speed)." +
             " Using a value of \"0\" makes the attack's local position stationary.")]
         protected float _travelSpeed = FLOAT_DEFAULT;
+
+        [SerializeField]
+        [Tooltip("Direction traveled by attack. This will be normalized.")]
+        protected Vector3 _travelDirection = Vector3.right;
 
         //
         //
@@ -276,6 +280,8 @@ namespace _0G.Legacy
 
         public virtual bool causesKnockBack { get { return _causesKnockBack; } }
 
+        public virtual bool HasAttackerAnimations => attackerAnimationCount > 0;
+
         public virtual bool hasAttackLifetime { get { return _attackLifetime.boolValue; } }
 
         public virtual GameObject hitVFXPrefab { get { return _hitVFXPrefab; } }
@@ -321,7 +327,9 @@ namespace _0G.Legacy
 
         public virtual int timeThreadIndex { get { return _timeThreadIndex; } }
 
-        public virtual float travelSpeed { get { return _travelSpeed; } }
+        public virtual Vector3 travelDirection => _travelDirection;
+
+        public virtual float travelSpeed => _travelSpeed;
 
         #endregion
 

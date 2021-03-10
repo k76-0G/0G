@@ -201,9 +201,10 @@ namespace _0G.Legacy
             float travelSpeed = _attackAbility.travelSpeed;
             if (!travelSpeed.Ap(0))
             {
+                Vector3 dir = _attackAbility.travelDirection.normalized;
                 float flipX = m_Body.FacingDirection == Direction.Left ? -1 : 1;
-                _velocity = new Vector2(travelSpeed * flipX, 0);
-                //TODO: support Y dimension
+                _velocity = new Vector2(flipX * dir.x * travelSpeed, dir.y * travelSpeed);
+                //TODO: support Z dimension
             }
 
             float attackDelay = _attackAbility.attackDelay;

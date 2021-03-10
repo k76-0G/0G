@@ -184,9 +184,12 @@ namespace _0G.Legacy
             OnAttackStart(attack);
             AttackStarted?.Invoke(attack);
             //set attacker animation
-            m_IsAttackerAnimating = true;
-            RasterAnimation attackerAnimation = attack.attackAbility.GetRandomAttackerRasterAnimation();
-            GraphicController.SetAnimation(AnimationContext.Attack, attackerAnimation, OnAttackerAnimationEnd);
+            if (attack.attackAbility.HasAttackerAnimations)
+            {
+                m_IsAttackerAnimating = true;
+                RasterAnimation attackerAnimation = attack.attackAbility.GetRandomAttackerRasterAnimation();
+                GraphicController.SetAnimation(AnimationContext.Attack, attackerAnimation, OnAttackerAnimationEnd);
+            }
             //and since the attack attempt succeeded, return TRUE
             return true;
         }
@@ -198,7 +201,7 @@ namespace _0G.Legacy
             if (attack == null) return;
 
             //unset attacker animation
-            if (m_IsAttackerAnimating)
+            if (m_IsAttackerAnimating && attack.attackAbility.HasAttackerAnimations)
             {
                 m_IsAttackerAnimating = false;
                 GraphicController.EndAnimation(AnimationContext.Attack);
@@ -253,7 +256,7 @@ namespace _0G.Legacy
         private void OnAttackerAnimationEnd(GraphicController graphicController, bool isCompleted)
         {
             //check m_IsAttackerAnimating to avoid looping via GraphicController.EndAnimation/EndCurrentAttack
-            if (m_IsAttackerAnimating)
+            if (m_IsAttackerAnimating && CurrentAttack != null && CurrentAttack.attackAbility.HasAttackerAnimations)
             {
                 m_IsAttackerAnimating = false;
                 EndCurrentAttack(isCompleted);
