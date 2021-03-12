@@ -231,9 +231,9 @@ namespace _0G.Legacy
         //
         [Header("Enemy AI Parameters")]
 
+        public float AI_AttackDistancePCApproach = default;
         [FormerlySerializedAs("_aiAttackDistance")]
         public float AI_AttackDistancePCStationary = default;
-        public float AI_AttackDistancePCApproach = default;
         public float AI_AttackDistancePCFlee = default;
 
         #endregion
